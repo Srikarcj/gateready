@@ -98,73 +98,99 @@ const CollegePredictor = () => {
   const allLocations = Array.from(new Set(colleges.map(college => college.location)));
 
   const predictColleges = () => {
-    if (!gateScore || !selectedCourse) {
+    // Input validation
+    const score = Number(gateScore);
+    if (isNaN(score) || score < 0 || score > 1000) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
+        title: 'Invalid Input',
+        description: 'Please enter a valid GATE score between 0 and 1000',
         variant: 'destructive',
       });
       return;
     }
 
+    if (!selectedCourse) {
+      toast({
+        title: 'Course Required',
+        description: 'Please select a course to predict colleges',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Normalize GATE score (0-1000) to a 0-100 scale
+    const normalizedGateScore = (score / 1000) * 100;
+
     // Calculate eligibility score for each college
-    const predictions = colleges.map(college => {
-      // Find the selected course in the college
-      const course = college.courses.find(c => c.name === selectedCourse);
-      if (!course) return null;
+    const predictions = colleges
+      .map(college => {
+        // Find the selected course in the college
+        const course = college.courses.find(c => c.name === selectedCourse);
+        if (!course) return null;
 
-      // Calculate base eligibility score (0-100)
-      let eligibilityScore = 0;
+        // Base eligibility score (0-100)
+        let eligibilityScore = 0;
 
-      // GATE Score component (50% weight)
-      const gateScoreComponent = (Number(gateScore) / 1000) * 50;
-      eligibilityScore += gateScoreComponent;
+        // 1. GATE Score component (50% weight)
+        const gateScoreWeight = 0.5;
+        const gateScoreComponent = normalizedGateScore * gateScoreWeight;
+        
+        // 2. College Rating component (20% weight)
+        const ratingWeight = 0.2;
+        const ratingComponent = (college.rating / 5) * 100 * ratingWeight;
+        
+        // 3. Cut-off match component (20% weight)
+        const cutOffWeight = 0.2;
+        // Calculate how close the score is to the cut-off (normalized to 0-1)
+        const scoreDistance = Math.abs(score - course.cutOff) / 1000;
+        const cutOffMatch = 1 - Math.min(1, scoreDistance); // 1 if exact match, decreasing as difference increases
+        const cutOffComponent = cutOffMatch * 100 * cutOffWeight;
+        
+        // 4. Placement component (10% weight)
+        const placementWeight = 0.1;
+        // Normalize placement average (assuming max 30 LPA)
+        const normalizedPlacement = Math.min(1, college.placement.average / 30);
+        const placementComponent = normalizedPlacement * 100 * placementWeight;
 
-      // College Rating component (20% weight)
-      const ratingComponent = (college.rating / 5) * 20;
-      eligibilityScore += ratingComponent;
+        // Calculate final score
+        eligibilityScore = gateScoreComponent + ratingComponent + cutOffComponent + placementComponent;
 
-      // Placement component (15% weight)
-      const placementComponent = (college.placement.average / 20) * 15;
-      eligibilityScore += placementComponent;
+        // Apply bonus/malus based on college type (IITs get +5% boost)
+        if (college.type === 'IIT') {
+          eligibilityScore = Math.min(100, eligibilityScore * 1.05);
+        }
 
-      // Cut-off match component (15% weight)
-      const cutOffMatch = Math.max(0, 1 - Math.abs(Number(gateScore) - course.cutOff) / 100);
-      const cutOffComponent = cutOffMatch * 15;
-      eligibilityScore += cutOffComponent;
-
-      return {
-        ...college,
-        eligibilityScore,
-        selectedCourse: course
-      };
-    }).filter((prediction): prediction is NonNullable<typeof prediction> => prediction !== null);
+        return {
+          ...college,
+          eligibilityScore: Math.round(eligibilityScore * 10) / 10, // Round to 1 decimal
+          selectedCourse: course
+        };
+      })
+      .filter((prediction): prediction is NonNullable<typeof prediction> => prediction !== null);
 
     // Apply filters
     let filteredPredictions = predictions;
 
-    // Filter by course
-    if (selectedCourse) {
-      filteredPredictions = filteredPredictions.filter(prediction => 
-        prediction.courses.some(course => course.name === selectedCourse)
-      );
-    }
+    // Filter by course (should already be handled, but keeping for safety)
+    filteredPredictions = filteredPredictions.filter(prediction => 
+      prediction.courses.some(course => course.name === selectedCourse)
+    );
 
-    // Filter by location (state)
+    // Filter by location (state) if specified
     if (selectedLocation) {
       filteredPredictions = filteredPredictions.filter(prediction => 
         prediction.location === selectedLocation
       );
     }
 
-    // Filter by type
+    // Filter by type if specified
     if (selectedType) {
       filteredPredictions = filteredPredictions.filter(prediction => 
         prediction.type === selectedType
       );
     }
 
-    // Filter by rating range
+    // Filter by rating range if specified
     if (selectedRating) {
       const [minRating, maxRating] = selectedRating.split('-').map(Number);
       filteredPredictions = filteredPredictions.filter(prediction => 
@@ -172,22 +198,24 @@ const CollegePredictor = () => {
       );
     }
 
-    // Sort by eligibility score
+    // Sort by eligibility score (descending)
     filteredPredictions.sort((a, b) => b.eligibilityScore - a.eligibilityScore);
 
     setPredictions(filteredPredictions);
 
+    // Show appropriate toast message
     if (filteredPredictions.length > 0) {
+      const topCollege = filteredPredictions[0];
       toast({
-        title: 'Success',
-        description: `Found ${filteredPredictions.length} colleges matching your criteria`,
+        title: 'Prediction Complete',
+        description: `Your score gives you a ${Math.round(topCollege.eligibilityScore)}% chance at ${topCollege.name}`,
         variant: 'default',
       });
     } else {
       toast({
-        title: 'No Results',
-        description: 'No colleges found matching your criteria. Try adjusting your filters or score.',
-        variant: 'default',
+        title: 'No Matches Found',
+        description: 'No colleges match your criteria. Try adjusting your filters or score.',
+        variant: 'destructive',
       });
     }
   };
