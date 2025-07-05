@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #messages {
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <div id="status" class="status">Connecting to WebSocket server...</div>
+    <div id="messages"></div>
+    <div>
+        <input type="text" id="messageInput" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const wsUrl = 'ws://localhost:3001/ws';
+        let ws;
+        const statusEl = document.getElementById('status');
+        const messagesEl = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+
+        function connect() {
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connection established');
+                statusEl.textContent = 'Connected to WebSocket server';
+                statusEl.className = 'status connected';
+                logMessage('System: Connected to WebSocket server');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    logMessage('Server: ' + JSON.stringify(data, null, 2));
+                } catch (e) {
+                    logMessage('Server: ' + event.data);
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket connection closed');
+                statusEl.textContent = 'Disconnected from WebSocket server';
+                statusEl.className = 'status disconnected';
+                logMessage('System: Disconnected from WebSocket server');
+                
+                // Try to reconnect after 3 seconds
+                setTimeout(connect, 3000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                statusEl.textContent = 'Error: ' + (error.message || 'Unknown error');
+                statusEl.className = 'status disconnected';
+            };
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message && ws && ws.readyState === WebSocket.OPEN) {
+                const data = {
+                    type: 'message',
+                    content: message,
+                    timestamp: new Date().toISOString()
+                };
+                ws.send(JSON.stringify(data));
+                logMessage('You: ' + message);
+                messageInput.value = '';
+            }
+        }
+
+        function logMessage(message) {
+            const messageEl = document.createElement('div');
+            messageEl.textContent = message;
+            messagesEl.appendChild(messageEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // Handle Enter key in the input field
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Start the WebSocket connection
+        connect();
+    </script>
+</body>
+</html>
