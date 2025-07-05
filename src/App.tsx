@@ -145,6 +145,11 @@ const App = () => {
                   <CollegePredictor />
                 </ProtectedRoute>
               } />
+              <Route path="/college/:id" element={
+                <ProtectedRoute>
+                  <CollegeDetails />
+                </ProtectedRoute>
+              } />
               <Route path="/college-gallery" element={
                 <ProtectedRoute>
                   <CollegeGallery />

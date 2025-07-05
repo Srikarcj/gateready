@@ -14,7 +14,18 @@ export interface GATEQuestion {
   explanation?: string;
 }
 
-export const gateQuestions = {
+interface BranchQuestions {
+  [subject: string]: GATEQuestion[];
+}
+
+type QuestionBank = {
+  [branch: string]: BranchQuestions | GATEQuestion[];
+} & {
+  'General Aptitude': GATEQuestion[];
+  'Engineering Mathematics': GATEQuestion[];
+};
+
+export const gateQuestions: QuestionBank = {
   // Computer Science Questions
   'Computer Science': {
     'Programming': [
@@ -1161,32 +1172,36 @@ export const gateQuestions = {
 
 // Function to get questions by branch and subject
 export const getQuestionsBySubject = (branch: string, subject: string, count: number = 30): GATEQuestion[] => {
+  // Handle special cases first (General Aptitude and Engineering Mathematics)
+  if (subject === 'General Aptitude' || subject === 'Engineering Mathematics') {
+    const questions = gateQuestions[subject as 'General Aptitude' | 'Engineering Mathematics'];
+    if (!questions) return [];
+    return questions.slice(0, count);
+  }
+  
+  // Get branch questions
   const branchQuestions = gateQuestions[branch as keyof typeof gateQuestions];
-  if (!branchQuestions) return [];
+  if (!branchQuestions || !(subject in branchQuestions)) return [];
   
-  if (subject === 'General Aptitude') {
-    return gateQuestions['General Aptitude'].slice(0, count);
-  }
-  
-  if (subject === 'Engineering Mathematics') {
-    return gateQuestions['Engineering Mathematics'].slice(0, count);
-  }
-  
-  const subjectQuestions = branchQuestions[subject as keyof typeof branchQuestions] as GATEQuestion[];
+  // Get subject questions
+  const subjectQuestions = (branchQuestions as BranchQuestions)[subject];
   if (!subjectQuestions) return [];
   
-  // If we need more questions than available, repeat with variations
-  const questions = [...subjectQuestions];
-  while (questions.length < count) {
-    const additionalQuestions = subjectQuestions.map((q, index) => ({
-      ...q,
-      id: q.id + 1000 + questions.length + index,
-      question: q.question + ` (Variation ${Math.floor(questions.length / subjectQuestions.length) + 1})`
-    }));
-    questions.push(...additionalQuestions);
+  // If we need more questions than available, return only the available questions
+  if (subjectQuestions.length < count) {
+    console.warn(`Only ${subjectQuestions.length} unique questions available for ${subject}, requested ${count}. Returning available questions.`);
+    return [...subjectQuestions]; // Return a copy to avoid mutation
   }
   
-  return questions.slice(0, count);
+  // Return a random subset of questions if we have more than needed
+  if (subjectQuestions.length > count) {
+    // Create a copy of the array to avoid mutating the original
+    const shuffled = [...subjectQuestions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
+  
+  // Return all questions if count matches exactly
+  return [...subjectQuestions]; // Return a copy to avoid mutation
 };
 
 // Function to generate mixed questions for full tests
@@ -1194,10 +1209,10 @@ export const generateFullTestQuestions = (branch: string): GATEQuestion[] => {
   const questions: GATEQuestion[] = [];
   
   // Add 10 General Aptitude questions
-  questions.push(...getQuestionsBySubject('General Aptitude', 'General Aptitude', 10));
+  questions.push(...getQuestionsBySubject(branch, 'General Aptitude', 10));
   
   // Add 15 Engineering Mathematics questions
-  questions.push(...getQuestionsBySubject('Engineering Mathematics', 'Engineering Mathematics', 15));
+  questions.push(...getQuestionsBySubject(branch, 'Engineering Mathematics', 15));
   
   // Add 40 core subject questions
   const branchQuestions = gateQuestions[branch as keyof typeof gateQuestions];
@@ -1206,8 +1221,10 @@ export const generateFullTestQuestions = (branch: string): GATEQuestion[] => {
     const questionsPerSubject = Math.ceil(40 / subjects.length);
     
     subjects.forEach(subject => {
-      const subjectQuestions = getQuestionsBySubject(branch, subject, questionsPerSubject);
-      questions.push(...subjectQuestions);
+      if (subject !== 'General Aptitude' && subject !== 'Engineering Mathematics') {
+        const subjectQuestions = getQuestionsBySubject(branch, subject, questionsPerSubject);
+        questions.push(...subjectQuestions);
+      }
     });
   }
   

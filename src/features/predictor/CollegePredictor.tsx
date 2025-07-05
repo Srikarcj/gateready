@@ -19,7 +19,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Link
 } from '@mui/material';
 import {
   School,
@@ -33,7 +34,8 @@ import {
   Science,
   Architecture,
   ArrowForward,
-  Refresh
+  Refresh,
+  OpenInNew
 } from '@mui/icons-material';
 import { useToast } from '@/components/ui/use-toast';
 import { colleges, College } from './collegeData';
@@ -203,12 +205,23 @@ const CollegePredictor = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h5" gutterBottom>
+    <Box sx={{ 
+      maxWidth: 1200, 
+      mx: 'auto', 
+      p: { xs: 1.5, sm: 2, md: 3 },
+      width: '100%',
+      boxSizing: 'border-box'
+    }}>
+      <Paper sx={{ 
+        p: { xs: 2, sm: 3 }, 
+        mb: 3,
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        <Typography variant="h5" component="h1" gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '1.75rem' } }}>
           College Predictor
         </Typography>
-        <Stack spacing={3}>
+        <Stack spacing={{ xs: 2, md: 3 }}>
           <TextField
             label="GATE Score"
             type="number"
@@ -223,7 +236,7 @@ const CollegePredictor = () => {
             }}
           />
 
-          <FormControl>
+          <FormControl fullWidth>
             <InputLabel>Course</InputLabel>
             <Select
               value={selectedCourse}
@@ -238,7 +251,7 @@ const CollegePredictor = () => {
             </Select>
           </FormControl>
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 2, sm: 2 }}>
             <FormControl fullWidth>
               <InputLabel>Location</InputLabel>
               <Select
@@ -255,7 +268,7 @@ const CollegePredictor = () => {
               </Select>
             </FormControl>
 
-            <FormControl sx={{ minWidth: 200 }}>
+            <FormControl fullWidth sx={{ minWidth: { xs: '100%', sm: 200 } }}>
               <InputLabel>College Type</InputLabel>
               <Select
                 value={selectedType}
@@ -268,7 +281,7 @@ const CollegePredictor = () => {
               </Select>
             </FormControl>
 
-            <FormControl sx={{ minWidth: 200 }}>
+            <FormControl fullWidth sx={{ minWidth: { xs: '100%', sm: 200 } }}>
               <InputLabel>Rating Range</InputLabel>
               <Select
                 value={selectedRating}
@@ -298,10 +311,15 @@ const CollegePredictor = () => {
       {/* Results Section */}
       {predictions.length > 0 ? (
         <Box sx={{ mt: 4 }}>
-          <Typography variant="h5" gutterBottom>
+          <Typography variant="h5" component="h2" gutterBottom sx={{ fontSize: { xs: '1.35rem', sm: '1.5rem' }, mt: { xs: 2, sm: 0 } }}>
             Recommended Colleges
           </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, 
+            gap: { xs: 2, md: 3 },
+            width: '100%'
+          }}>
             {predictions.map((college) => (
               <Card 
                 key={college.id}
@@ -311,19 +329,56 @@ const CollegePredictor = () => {
                   flexDirection: 'column',
                   transition: 'transform 0.2s',
                   '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 3
-                  }
+                    transform: { xs: 'none', sm: 'translateY(-4px)' },
+                    boxShadow: { xs: 1, sm: 3 }
+                  },
+                  width: '100%',
+                  maxWidth: '100%',
+                  mx: 'auto'
                 }}
               >
                 <CardContent>
                   <Stack spacing={2}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      justifyContent: 'space-between', 
+                      alignItems: { xs: 'flex-start', sm: 'center' },
+                      gap: 1,
+                      width: '100%'
+                    }}>
                       <Box>
-                        <Typography variant="h6" gutterBottom>
-                          {college.name}
-                        </Typography>
-                        <Stack direction="row" spacing={1}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 1, 
+                          flexWrap: 'wrap',
+                          width: '100%',
+                          mb: { xs: 1, sm: 0 }
+                        }}>
+                          <Typography variant="h6" gutterBottom sx={{ mb: 0, mr: 1 }}>
+                            {college.name}
+                          </Typography>
+                          <Tooltip title="Visit official website">
+                            <Link 
+                              href={college.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              color="primary"
+                              sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center',
+                                textDecoration: 'none',
+                                '&:hover': {
+                                  textDecoration: 'underline',
+                                }
+                              }}
+                            >
+                              <OpenInNew fontSize="small" sx={{ fontSize: '1rem' }} />
+                            </Link>
+                          </Tooltip>
+                        </Box>
+                        <Stack direction="row" spacing={1} sx={{ mt: { xs: 1, sm: 0 } }}>
                           <Chip 
                             label={college.type} 
                             color={college.type === 'IIT' ? 'primary' : 'secondary'}
@@ -336,7 +391,11 @@ const CollegePredictor = () => {
                           />
                         </Stack>
                       </Box>
-                      <Box sx={{ textAlign: 'right' }}>
+                      <Box sx={{ 
+                        textAlign: { xs: 'left', sm: 'right' },
+                        width: { xs: '100%', sm: 'auto' },
+                        mt: { xs: 1, sm: 0 }
+                      }}>
                         <Typography variant="h6" color="primary">
                           {college.eligibilityScore.toFixed(1)}%
                         </Typography>
@@ -350,7 +409,16 @@ const CollegePredictor = () => {
                       {college.description}
                     </Typography>
 
-                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      gap: { xs: 1.5, sm: 2 }, 
+                      flexWrap: 'wrap',
+                      justifyContent: { xs: 'space-between', sm: 'flex-start' },
+                      '& > div': {
+                        flex: { xs: '0 0 calc(50% - 8px)', sm: 'auto' },
+                        minWidth: { xs: 'auto', sm: '100px' }
+                      }
+                    }}>
                       <Box>
                         <Typography variant="body2" color="text.secondary">
                           Rank
@@ -380,6 +448,12 @@ const CollegePredictor = () => {
                       fullWidth
                       onClick={() => handleViewDetails(college.id)}
                       startIcon={<ArrowForward />}
+                      size={window.innerWidth < 600 ? 'small' : 'medium'}
+                      sx={{
+                        mt: 1,
+                        py: { xs: 1, sm: 1.25 },
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }}
                     >
                       View Details
                     </Button>

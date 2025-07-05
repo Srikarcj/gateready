@@ -9,8 +9,8 @@ export const TitleBanner = () => {
 
   return (
     <>
-      {/* Desktop Title Banner - Original */}
-      <div className="hidden md:block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-6">
+      {/* Desktop Title Banner - Scrolls with page */}
+      <div className="hidden md:block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-6 relative z-10">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
             <div className="text-left">

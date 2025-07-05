@@ -357,17 +357,20 @@ const CollegeMap = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               )}
-              renderOption={(props, option) => (
-                <ListItem {...props}>
-                  <ListItemIcon>
-                    <School />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={option.name}
-                    secondary={`${option.city}, ${option.location}`}
-                  />
-                </ListItem>
-              )}
+              renderOption={(props, option) => {
+                const { key, ...restProps } = props;
+                return (
+                  <ListItem key={key} {...restProps}>
+                    <ListItemIcon>
+                      <School />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={option.name}
+                      secondary={`${option.city}, ${option.location}`}
+                    />
+                  </ListItem>
+                );
+              }}
             />
           </Paper>
 

@@ -63,7 +63,8 @@ import {
   Engineering,
   Architecture,
   ArrowBack,
-  Science
+  Science,
+  OpenInNew
 } from '@mui/icons-material';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { colleges } from './collegeData';
@@ -203,76 +204,149 @@ const CollegeDetails = () => {
       {/* Header Section */}
       <Paper 
         sx={{ 
-          p: 3, 
+          p: { xs: 2, sm: 3 }, 
           mb: 3,
           background: `linear-gradient(45deg, ${alpha(theme.palette.primary.main, 0.1)} 30%, ${alpha(theme.palette.secondary.main, 0.1)} 90%)`,
+          overflow: 'hidden',
         }}
       >
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-          <Avatar 
-            sx={{ 
-              width: 64, 
-              height: 64,
-              bgcolor: college.type === 'IIT' ? 'primary.main' : 'secondary.main'
-            }}
-          >
-            <School sx={{ fontSize: 40 }} />
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Typography variant="h4" gutterBottom>
-                {college.name}
-              </Typography>
-              <Chip
-                label={college.type}
-                color={college.type === 'IIT' ? 'primary' : 'secondary'}
-                sx={{ height: 32 }}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Chip
-                icon={<LocationOn />}
-                label={college.location}
-                variant="outlined"
-              />
-              <Chip
-                icon={<TrendingUp />}
-                label={`Rank #${college.rank}`}
-                color="info"
-              />
-              <Stack direction="row" spacing={0.5} alignItems="center">
-                <Rating value={college.rating} precision={0.5} readOnly />
-                <Typography variant="body2" color="text.secondary">
-                  ({college.rating})
-                </Typography>
-              </Stack>
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          spacing={{ xs: 2, sm: 3 }} 
+          alignItems={{ xs: 'flex-start', sm: 'center' }} 
+          sx={{ mb: 3, width: '100%' }}
+        >
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: 2,
+            width: { xs: '100%', sm: 'auto' }
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+              <Avatar 
+                sx={{ 
+                  width: 64, 
+                  height: 64,
+                  bgcolor: college.type === 'IIT' ? 'primary.main' : 'secondary.main',
+                  flexShrink: 0
+                }}
+              >
+                <School sx={{ fontSize: 40 }} />
+              </Avatar>
+              <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      fontSize: '2rem',
+                      lineHeight: 1.2,
+                      wordBreak: 'break-word',
+                      flex: '1 1 auto',
+                      minWidth: 0
+                    }}
+                  >
+                    {college.name}
+                  </Typography>
+                  <Chip
+                    label={college.type}
+                    color={college.type === 'IIT' ? 'primary' : 'secondary'}
+                    sx={{ height: 32, fontSize: '0.875rem' }}
+                  />
+                </Box>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 1,
+                  alignItems: 'center',
+                  mt: 1
+                }}>
+                  <Chip
+                    icon={<LocationOn />}
+                    label={college.location}
+                    variant="outlined"
+                    size="medium"
+                  />
+                  <Chip
+                    icon={<TrendingUp />}
+                    label={`Rank #${college.rank}`}
+                    color="info"
+                    size="medium"
+                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Rating value={college.rating} precision={0.5} readOnly />
+                    <Typography variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                      ({college.rating})
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+          <Box sx={{ 
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            ml: 2,
+            flexShrink: 0
+          }}>
+            <Stack direction="row" spacing={1}>
+              <Tooltip title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
+                <IconButton 
+                  onClick={() => setIsFavorite(!isFavorite)} 
+                  color={isFavorite ? 'primary' : 'default'}
+                  size={isMobile ? 'small' : 'medium'}
+                >
+                  {isFavorite ? <Favorite /> : <FavoriteBorder />}
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={isBookmarked ? 'Remove bookmark' : 'Bookmark this college'}>
+                <IconButton 
+                  onClick={toggleBookmark} 
+                  color={isBookmarked ? 'primary' : 'default'}
+                  size={isMobile ? 'small' : 'medium'}
+                >
+                  {isBookmarked ? <Bookmark /> : <BookmarkBorder />}
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Share">
+                <IconButton size={isMobile ? 'small' : 'medium'}>
+                  <Share />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={`Visit ${college.name} official website`}>
+                <Button
+                  variant="contained"
+                  startIcon={<Language />}
+                  href={college.website.startsWith('http') ? college.website : `https://${college.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size={isMobile ? 'small' : 'medium'}
+                  fullWidth={isMobile}
+                  sx={{
+                    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #1976D2 30%, #1E88E5 90%)',
+                    },
+                    whiteSpace: 'nowrap',
+                    minWidth: 'auto',
+                    '@media (max-width: 600px)': {
+                      width: '100%',
+                      mt: 1
+                    }
+                  }}
+                  onClick={(e) => {
+                    if (!college.website) {
+                      e.preventDefault();
+                      console.warn('Website URL is not available');
+                    }
+                  }}
+                >
+                  {isMobile ? 'Website' : 'Visit Website'}
+                </Button>
+              </Tooltip>
             </Stack>
           </Box>
-          <Stack direction="row" spacing={1}>
-            <IconButton onClick={() => setIsFavorite(!isFavorite)} color={isFavorite ? 'primary' : 'default'}>
-              {isFavorite ? <Favorite /> : <FavoriteBorder />}
-            </IconButton>
-            <IconButton onClick={toggleBookmark} color={isBookmarked ? 'primary' : 'default'}>
-              {isBookmarked ? <Bookmark /> : <BookmarkBorder />}
-            </IconButton>
-            <IconButton>
-              <Share />
-            </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<Language />}
-              href={college.website}
-              target="_blank"
-              sx={{
-                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #1976D2 30%, #1E88E5 90%)',
-                }
-              }}
-            >
-              Visit Website
-            </Button>
-          </Stack>
         </Stack>
 
         <Typography variant="body1" paragraph>

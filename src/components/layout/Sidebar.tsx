@@ -1,6 +1,40 @@
 import React, { useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth, SignOutButton } from '@clerk/clerk-react';
+import { useAuth, useUser, SignOutButton } from '@clerk/clerk-react';
+
+type NavItemProps = {
+  item: {
+    text: string;
+    icon: React.ReactNode;
+    path: string;
+    external: boolean;
+  };
+  pathname: string;
+  onClick: () => void;
+};
+
+const NavItem = ({ item, pathname, onClick }: NavItemProps) => {
+  const isActive = pathname === item.path;
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        w-full text-left flex items-center space-x-3 px-3 py-2 rounded-md text-sm transition-colors
+        ${isActive 
+          ? 'bg-blue-50 text-blue-700 font-medium' 
+          : 'text-gray-700 hover:bg-gray-50'
+        }
+      `}
+    >
+      <span className={`flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
+        {item.icon}
+      </span>
+      <span className="truncate">{item.text}</span>
+    </button>
+  );
+};
+
 import {
   BookOpen,
   Brain,
@@ -28,7 +62,8 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const pathname = location.pathname;
-  const { isLoaded, isSignedIn, user } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
 
   // Get page-specific headers for mobile sidebar
@@ -73,9 +108,15 @@ const Sidebar = () => {
     }
   };
 
-  // Handle navigation with auth check
+  // Handle navigation with auth check and external URLs
   const handleNavigation = useCallback((path: string, isExternal = false) => {
     if (!isLoaded) return;
+    
+    // Handle external URLs
+    if (path.startsWith('http') || path.startsWith('https') || path.startsWith('www.')) {
+      window.open(path, '_blank', 'noopener,noreferrer');
+      return;
+    }
     
     if (!isSignedIn) {
       // Store the intended path for after login
@@ -142,6 +183,12 @@ const Sidebar = () => {
       icon: <GraduationCap className="h-5 w-5" />,
       path: '/college-predictor',
       external: false
+    },
+    {
+      text: 'Explore Colleges',
+      icon: <GraduationCap className="h-5 w-5" />,
+      path: 'https://gate-ready-with-ai-colleges.netlify.app/',
+      external: true
     },
     {
       text: 'College Map',
@@ -220,16 +267,16 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile Sidebar - Simple & Smooth */}
-      <div className="md:hidden bg-gradient-to-r from-blue-600 to-purple-600 text-white sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center justify-between h-14 px-4">
+      {/* Mobile Navigation Bar */}
+      <div className="md:hidden bg-white border-b sticky top-0 z-50 shadow-sm">
+        {/* Top Bar with Menu Button */}
+        <div className="flex items-center justify-between h-14 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
               <span className="text-sm font-bold">G</span>
             </div>
             <div>
               <h1 className="text-lg font-bold">GATE Ready</h1>
-              <p className="text-xs opacity-90">AI-Powered Study Assistant</p>
             </div>
           </div>
           <button
@@ -245,46 +292,71 @@ const Sidebar = () => {
           </button>
         </div>
 
-        {/* Simple Mobile Dropdown */}
+        {/* Quick Access Bar - Always Visible */}
+        <div className="flex items-stretch justify-between bg-white border-b shadow-sm">
+          {/* Dashboard */}
+          <button
+            onClick={() => handleNavigation('/dashboard')}
+            className={`flex-1 flex flex-col items-center py-2 text-xs transition-colors ${
+              location.pathname === '/dashboard' 
+                ? 'text-blue-600 border-b-2 border-blue-600' 
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
+          >
+            <BookOpen className="h-5 w-5 mb-1" />
+            <span>Home</span>
+          </button>
+
+          {/* Tests */}
+          <button
+            onClick={() => handleNavigation('/practice-tests')}
+            className={`flex-1 flex flex-col items-center py-2 text-xs transition-colors ${
+              location.pathname === '/practice-tests' 
+                ? 'text-blue-600 border-b-2 border-blue-600' 
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
+          >
+            <Zap className="h-5 w-5 mb-1" />
+            <span>Tests</span>
+          </button>
+
+          {/* Colleges - Direct External Link */}
+          <a
+            href="https://gate-ready-with-ai-colleges.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex flex-col items-center py-2 text-xs transition-colors text-gray-600 hover:text-blue-600"
+          >
+            <GraduationCap className="h-5 w-5 mb-1" />
+            <span>Colleges</span>
+          </a>
+
+          {/* AI Tutor */}
+          <button
+            onClick={() => handleNavigation('/ai-tutor')}
+            className={`flex-1 flex flex-col items-center py-2 text-xs transition-colors ${
+              location.pathname === '/ai-tutor' 
+                ? 'text-blue-600 border-b-2 border-blue-600' 
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
+          >
+            <Bot className="h-5 w-5 mb-1" />
+            <span>AI Tutor</span>
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
         {isMobileOpen && (
-          <div className="bg-white shadow-lg border-t">
-            {/* Simple Page Headers */}
-            <div className="p-4 bg-gray-50 border-b">
-              <div className="flex items-center gap-2 mb-2">
-                {getPageHeaders().icon}
-                <h2 className="text-lg font-semibold text-gray-900">{getPageHeaders().title}</h2>
-              </div>
-              <p className="text-sm text-gray-600">{getPageHeaders().subtitle}</p>
-            </div>
-
-            {/* Simple Stats Cards */}
-            <div className="p-4 bg-gray-50 border-b">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Quick Stats</h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="p-2 text-center bg-white rounded-lg shadow-sm">
-                  <div className="text-lg font-bold text-blue-600">24/7</div>
-                  <div className="text-xs text-gray-600">AI Support</div>
-                </div>
-                <div className="p-2 text-center bg-white rounded-lg shadow-sm">
-                  <div className="text-lg font-bold text-green-600">100+</div>
-                  <div className="text-xs text-gray-600">Colleges</div>
-                </div>
-                <div className="p-2 text-center bg-white rounded-lg shadow-sm">
-                  <div className="text-lg font-bold text-purple-600">1000+</div>
-                  <div className="text-xs text-gray-600">Resources</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Simple User Profile */}
+          <div className="bg-white shadow-lg border-t max-h-[calc(100vh-120px)] overflow-y-auto">
+            {/* User Profile Section */}
             {isSignedIn && (
-              <div className="p-4 bg-gray-50 border-b">
+              <div className="p-4 border-b bg-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white">
                     <User className="h-5 w-5" />
                   </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900 truncate">
                       {user?.firstName || user?.fullName || user?.username || 'User'}
                     </div>
                     <div className="text-xs text-gray-500 truncate">
@@ -295,36 +367,101 @@ const Sidebar = () => {
               </div>
             )}
 
-            {/* Simple Navigation */}
-            <div className="max-h-64 overflow-y-auto p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Navigation</h3>
-              <div className="space-y-1">
-                {menuItems.map((item) => (
-                  <button
-                    key={item.path}
-                    onClick={() => {
-                      handleNavigation(item.path, item.external);
-                      setIsMobileOpen(false);
-                    }}
-                    className={`
-                      w-full text-left flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors
-                      ${pathname === item.path
-                        ? 'bg-blue-600 text-white'
-                        : 'hover:bg-gray-100 text-gray-700'
-                      }
-                    `}
-                  >
-                    <span className="flex-shrink-0">
-                      {item.icon}
-                    </span>
-                    <span className="truncate">{item.text}</span>
-                  </button>
-                ))}
+            {/* Main Navigation Sections */}
+            <div className="p-2">
+              {/* Study Section */}
+              <div className="mb-4">
+                <h3 className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Study</h3>
+                <div className="space-y-1">
+                  {menuItems
+                    .filter(item => 
+                      ['/courses', '/tutorials', '/notes', '/flashcards', '/pomodoro-revision', '/spaced-repetition']
+                      .includes(item.path)
+                    )
+                    .map((item) => (
+                      <NavItem 
+                        key={item.path}
+                        item={item} 
+                        pathname={pathname} 
+                        onClick={() => {
+                          handleNavigation(item.path, item.external);
+                          setIsMobileOpen(false);
+                        }}
+                      />
+                    ))}
+                </div>
+              </div>
+
+              {/* Tests Section */}
+              <div className="mb-4">
+                <h3 className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tests</h3>
+                <div className="space-y-1">
+                  {menuItems
+                    .filter(item => 
+                      ['/practice-tests', '/mock-tests', '/performance'].includes(item.path)
+                    )
+                    .map((item) => (
+                      <NavItem 
+                        key={item.path}
+                        item={item} 
+                        pathname={pathname} 
+                        onClick={() => {
+                          handleNavigation(item.path, item.external);
+                          setIsMobileOpen(false);
+                        }}
+                      />
+                    ))}
+                </div>
+              </div>
+
+              {/* College Section */}
+              <div className="mb-4">
+                <h3 className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Colleges</h3>
+                <div className="space-y-1">
+                  {menuItems
+                    .filter(item => 
+                      ['/college-predictor', 'https://gate-ready-with-ai-colleges.netlify.app/', '/college-map', '/college-transport']
+                      .includes(item.path)
+                    )
+                    .map((item) => (
+                      <NavItem 
+                        key={item.path}
+                        item={item} 
+                        pathname={pathname} 
+                        onClick={() => {
+                          handleNavigation(item.path, item.external);
+                          setIsMobileOpen(false);
+                        }}
+                      />
+                    ))}
+                </div>
+              </div>
+
+              {/* Tools Section */}
+              <div className="mb-4">
+                <h3 className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tools</h3>
+                <div className="space-y-1">
+                  {menuItems
+                    .filter(item => 
+                      ['/ai-tutor', '/generate-schedule', '/priority-scheduler', '/todo'].includes(item.path)
+                    )
+                    .map((item) => (
+                      <NavItem 
+                        key={item.path}
+                        item={item} 
+                        pathname={pathname} 
+                        onClick={() => {
+                          handleNavigation(item.path, item.external);
+                          setIsMobileOpen(false);
+                        }}
+                      />
+                    ))}
+                </div>
               </div>
             </div>
 
-            {/* Simple Sign Out */}
-            <div className="p-4 border-t">
+            {/* Sign Out */}
+            <div className="p-4 border-t sticky bottom-0 bg-white">
               <SignOutButton>
                 <Button
                   variant="outline"

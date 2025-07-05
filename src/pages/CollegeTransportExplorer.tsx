@@ -866,7 +866,7 @@ const CollegeTransportExplorer = () => {
                         )}
                         <div className="mt-2">
                           {college.transportOptions.map((option, index) => (
-                            <div key={index} className="text-sm border-t pt-2 mt-2">
+                            <div key={`${college.id}-${index}`} className="text-sm border-t pt-2 mt-2">
                               <div className="flex items-center justify-between">
                                 <p className="font-medium">{option.name}</p>
                                 <Badge
@@ -1003,7 +1003,7 @@ const CollegeTransportExplorer = () => {
                         {college.transportOptions
                           .filter(option => selectedTransportType === 'all' || option.type === selectedTransportType)
                           .map((option, index) => (
-                            <div key={index} className="p-2 bg-muted rounded-md">
+                            <div key={`${college.id}-transport-${index}`} className="p-2 bg-muted rounded-md">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   {option.type === 'bus' && <Bus className="h-4 w-4" />}
@@ -1053,7 +1053,7 @@ const CollegeTransportExplorer = () => {
               {routeDetails.transportOptions
                 .filter(option => selectedTransportType === 'all' || option.type === selectedTransportType)
                 .map((option, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
+                  <div key={`${selectedCollege.id}-detail-${index}`} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         {option.type === 'bus' && <Bus className="h-5 w-5 text-blue-500" />}

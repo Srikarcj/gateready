@@ -17,7 +17,7 @@ import {
   Circle,
   Bookmark
 } from 'lucide-react';
-import { getQuestionsBySubject, generateFullTestQuestions, GATEQuestion } from '@/data/gateQuestions';
+import { getQuestionsBySubject, generateFullTestQuestions, GATEQuestion, gateQuestions } from '@/data/gateQuestions';
 
 // Calculator state and functions
 const useCalculator = () => {
@@ -25,6 +25,7 @@ const useCalculator = () => {
   const [previousValue, setPreviousValue] = useState<number | null>(null);
   const [operation, setOperation] = useState<string | null>(null);
   const [waitingForOperand, setWaitingForOperand] = useState(false);
+  const [isScientificMode, setIsScientificMode] = useState(false);
 
   const inputNumber = (num: string) => {
     if (waitingForOperand) {
@@ -35,7 +36,54 @@ const useCalculator = () => {
     }
   };
 
+  const toggleSign = () => {
+    if (display.startsWith('-')) {
+      setDisplay(display.substring(1));
+    } else if (display !== '0') {
+      setDisplay('-' + display);
+    }
+  };
+
+  const percent = () => {
+    const currentValue = parseFloat(display);
+    setDisplay(String(currentValue / 100));
+  };
+
   const inputOperation = (nextOperation: string) => {
+    // Handle special operations that don't need a second operand
+    if (['sin(', 'cos(', 'tan(', 'log(', 'ln(', 'e^(', '10^(', '√(', '!', '1/(', '|'].includes(nextOperation)) {
+      try {
+        let result;
+        const currentValue = parseFloat(display);
+        
+        switch(nextOperation) {
+          case 'sin(': result = Math.sin((currentValue * Math.PI) / 180); break;
+          case 'cos(': result = Math.cos((currentValue * Math.PI) / 180); break;
+          case 'tan(': result = Math.tan((currentValue * Math.PI) / 180); break;
+          case 'log(': result = Math.log10(currentValue); break;
+          case 'ln(': result = Math.log(currentValue); break;
+          case 'e^(': result = Math.exp(currentValue); break;
+          case '10^(': result = Math.pow(10, currentValue); break;
+          case '√(': result = Math.sqrt(currentValue); break;
+          case '!': 
+            result = 1;
+            for (let i = 2; i <= currentValue; i++) {
+              result *= i;
+            }
+            break;
+          case '1/(': result = 1 / currentValue; break;
+          case '|': result = Math.abs(currentValue); break;
+          default: result = currentValue;
+        }
+        
+        setDisplay(String(result));
+        setPreviousValue(result);
+      } catch (e) {
+        setDisplay('Error');
+      }
+      return;
+    }
+
     const inputValue = parseFloat(display);
 
     if (previousValue === null) {
@@ -97,7 +145,11 @@ const useCalculator = () => {
     inputOperation,
     performCalculation,
     clear,
-    inputDecimal
+    inputDecimal,
+    isScientificMode,
+    setIsScientificMode,
+    toggleSign,
+    percent
   };
 };
 
@@ -144,16 +196,48 @@ const TestInterface = () => {
 
   const generateQuestions = (config: any): GATEQuestion[] => {
     const { branch, testType, subject } = config;
-
-    if (testType === 'subject' && subject) {
-      // Subject-specific test - get real GATE questions
-      return getQuestionsBySubject(branch, subject, 30);
-    } else if (testType === 'basicFull' || testType === 'mock') {
-      // Full test - mix of all subjects with real GATE questions
-      return generateFullTestQuestions(branch);
+    
+    try {
+      if (testType === 'subject' && subject) {
+        // Subject-specific test - get all questions for the subject
+        // Using a large number to ensure we get all questions
+        return getQuestionsBySubject(branch, subject, 1000);
+      } else if (testType === 'basicFull' || testType === 'mock') {
+        // Full test - get questions from all subjects
+        const questions: GATEQuestion[] = [];
+        
+        // Add General Aptitude questions (10)
+        const aptitudeQuestions = getQuestionsBySubject(branch, 'General Aptitude', 10);
+        questions.push(...aptitudeQuestions);
+        
+        // Add Engineering Mathematics questions (15)
+        const mathQuestions = getQuestionsBySubject(branch, 'Engineering Mathematics', 15);
+        questions.push(...mathQuestions);
+        
+        // Add core subject questions (40 total, distributed among subjects)
+        const branchData = gateQuestions[branch as keyof typeof gateQuestions];
+        if (branchData && typeof branchData === 'object') {
+          const coreSubjects = Object.keys(branchData).filter(
+            sub => sub !== 'General Aptitude' && sub !== 'Engineering Mathematics'
+          );
+          
+          const questionsPerSubject = Math.ceil(40 / Math.max(1, coreSubjects.length));
+          
+          coreSubjects.forEach(sub => {
+            const subjectQs = getQuestionsBySubject(branch, sub, questionsPerSubject);
+            questions.push(...subjectQs);
+          });
+        }
+        
+        // Shuffle all questions for better distribution
+        return questions.sort(() => Math.random() - 0.5);
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      return [];
     }
-
-    return [];
   };
 
   const getTestDuration = (testType) => {
@@ -443,24 +527,31 @@ const TestInterface = () => {
                 <CardTitle className="text-lg">Question Palette</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-5 gap-2 mb-4">
-                  {questions.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentQuestion(index)}
-                      className={`w-10 h-10 rounded text-sm font-medium transition-colors ${
-                        index === currentQuestion
-                          ? 'bg-blue-600 text-white'
-                          : answers[questions[index]?.id] !== undefined
-                          ? 'bg-green-100 text-green-800 border border-green-300'
-                          : flaggedQuestions.has(questions[index]?.id)
-                          ? 'bg-red-100 text-red-800 border border-red-300'
-                          : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
+                <div className="max-h-[400px] overflow-y-auto pr-2 mb-4">
+                  <div className="grid grid-cols-5 gap-2">
+                    {questions.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentQuestion(index)}
+                        className={`w-10 h-10 rounded text-sm font-medium transition-colors flex items-center justify-center ${
+                          index === currentQuestion
+                            ? 'bg-blue-600 text-white'
+                            : answers[questions[index]?.id] !== undefined
+                            ? 'bg-green-100 text-green-800 border border-green-300'
+                            : flaggedQuestions.has(questions[index]?.id)
+                            ? 'bg-red-100 text-red-800 border border-red-300'
+                            : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
+                        }`}
+                        title={`Question ${index + 1}${
+                          answers[questions[index]?.id] !== undefined ? ' (Answered)' : ''
+                        }${
+                          flaggedQuestions.has(questions[index]?.id) ? ' (Flagged)' : ''
+                        }`}
+                      >
+                        {index + 1}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 
                 <div className="space-y-2 text-sm">
@@ -503,181 +594,153 @@ const TestInterface = () => {
         </div>
       </div>
 
-      {/* Modern Scientific Calculator Modal */}
+      {/* GATE Style Calculator Modal */}
       {showCalculator && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="w-full max-w-sm mx-auto my-8">
-            <Card className="bg-gradient-to-br from-gray-900 via-gray-800 to-black border-0 shadow-2xl rounded-3xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white p-4 relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/30 via-teal-400/30 to-cyan-400/30"></div>
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                      <Calculator className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-white font-bold text-lg">Calculator</CardTitle>
-                      <p className="text-white/80 text-xs">Scientific Mode</p>
-                    </div>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-xs mx-auto">
+            <Card className="bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden">
+              <CardHeader className="bg-blue-800 text-white p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5 text-white" />
+                    <CardTitle className="text-lg font-medium">GATE Calculator</CardTitle>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setShowCalculator(false)}
-                    className="text-white hover:bg-white/20 rounded-full h-10 w-10 p-0 transition-all duration-200 hover:rotate-90"
+                    onClick={() => calculator.setIsScientificMode(!calculator.isScientificMode)}
+                    className="text-white hover:bg-white/20 h-8 px-3 text-xs"
                   >
-                    <span className="text-xl">×</span>
+                    {calculator.isScientificMode ? 'Standard' : 'Scientific'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowCalculator(false)}
+                    className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                  >
+                    ×
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-6 bg-gradient-to-b from-gray-800 via-gray-900 to-black">
-                {/* Modern Display */}
-                <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-6 mb-6 border border-emerald-500/30 shadow-2xl relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 rounded-2xl"></div>
-                  <div className="relative">
-                    <div className="text-right text-4xl font-light min-h-[60px] flex items-center justify-end text-emerald-400 tracking-wide font-mono">
-                      {calculator.display}
-                    </div>
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                        <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse delay-100"></div>
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-200"></div>
-                      </div>
-                      <div className="text-xs text-gray-400 font-mono">GATE CALC</div>
-                    </div>
+              <CardContent className="p-4 bg-gray-50">
+                {/* Calculator Display */}
+                <div className="bg-white border border-gray-300 rounded p-3 mb-4 shadow-inner">
+                  <div className="text-right text-3xl font-mono text-gray-800 min-h-[40px] overflow-x-auto whitespace-nowrap">
+                    {calculator.display}
                   </div>
                 </div>
 
-                {/* Modern Calculator Grid */}
-                <div className="grid grid-cols-4 gap-2 mb-4">
+                {/* Calculator Grid */}
+                <div className="grid grid-cols-4 gap-2 mb-3">
                   {/* Row 1 - Functions */}
                   <Button
                     onClick={calculator.clear}
-                    className="h-14 bg-gradient-to-br from-red-500 via-red-600 to-red-700 hover:from-red-400 hover:via-red-500 hover:to-red-600 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group"
+                    className="h-12 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors"
                   >
-                    <span className="relative z-10">C</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    C
                   </Button>
                   <Button
                     onClick={() => calculator.inputOperation('±')}
-                    className="h-14 bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 hover:from-amber-400 hover:via-orange-400 hover:to-red-400 text-white font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group"
+                    className="h-12 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors"
                   >
-                    <span className="relative z-10">±</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    ±
                   </Button>
                   <Button
                     onClick={() => calculator.inputOperation('%')}
-                    className="h-14 bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 hover:from-amber-400 hover:via-orange-400 hover:to-red-400 text-white font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group"
+                    className="h-12 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors"
                   >
-                    <span className="relative z-10">%</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    %
                   </Button>
                   <Button
                     onClick={() => calculator.inputOperation('÷')}
-                    className="h-14 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-400 hover:via-indigo-400 hover:to-purple-400 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group"
+                    className="h-12 bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-md transition-colors"
                   >
-                    <span className="relative z-10">÷</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    ÷
                   </Button>
 
                   {/* Row 2 - Numbers 7,8,9 and × */}
                   <Button
                     onClick={() => calculator.inputNumber('7')}
-                    className="h-14 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 hover:from-gray-500 hover:via-gray-600 hover:to-gray-700 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group"
+                    className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors"
                   >
-                    <span className="relative z-10">7</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    7
                   </Button>
                   <Button
                     onClick={() => calculator.inputNumber('8')}
-                    className="h-14 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 hover:from-gray-500 hover:via-gray-600 hover:to-gray-700 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group"
+                    className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors"
                   >
-                    <span className="relative z-10">8</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    8
                   </Button>
                   <Button
                     onClick={() => calculator.inputNumber('9')}
-                    className="h-14 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 hover:from-gray-500 hover:via-gray-600 hover:to-gray-700 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group"
+                    className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors"
                   >
-                    <span className="relative z-10">9</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    9
                   </Button>
                   <Button
                     onClick={() => calculator.inputOperation('×')}
-                    className="h-14 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-400 hover:via-indigo-400 hover:to-purple-400 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group"
+                    className="h-12 bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-md transition-colors"
                   >
-                    <span className="relative z-10">×</span>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    ×
                   </Button>
 
                   {/* Rows 3-5 - Remaining numbers and operations */}
-                  {[
-                    ['4', '5', '6', '-'],
-                    ['1', '2', '3', '+'],
-                    ['0', '0', '.', '=']
-                  ].map((row, rowIndex) =>
-                    row.map((btn, btnIndex) => {
-                      const isNumber = !isNaN(Number(btn));
-                      const isOperation = ['+', '-', '×', '÷'].includes(btn);
-                      const isEquals = btn === '=';
-                      const isZero = btn === '0' && btnIndex === 0 && rowIndex === 2;
-
-                      let className = "h-14 font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group ";
-
-                      if (isEquals) {
-                        className += "bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-400 hover:via-green-400 hover:to-teal-400";
-                      } else if (isOperation) {
-                        className += "bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-400 hover:via-indigo-400 hover:to-purple-400";
-                      } else {
-                        className += "bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 hover:from-gray-500 hover:via-gray-600 hover:to-gray-700";
-                      }
-
-                      if (isZero) className += " col-span-2";
-                      if (btnIndex === 1 && rowIndex === 2) return null; // Skip second 0
-
-                      return (
-                        <Button
-                          key={`${rowIndex}-${btnIndex}`}
-                          onClick={() => {
-                            if (isEquals) calculator.performCalculation();
-                            else if (btn === '.') calculator.inputDecimal();
-                            else if (isOperation) calculator.inputOperation(btn);
-                            else calculator.inputNumber(btn);
-                          }}
-                          className={className + " text-white"}
-                        >
-                          <span className="relative z-10">{btn}</span>
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        </Button>
-                      );
-                    })
-                  )}
+                  <>
+                    <Button onClick={() => calculator.inputNumber('4')} className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors">4</Button>
+                    <Button onClick={() => calculator.inputNumber('5')} className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors">5</Button>
+                    <Button onClick={() => calculator.inputNumber('6')} className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors">6</Button>
+                    <Button onClick={() => calculator.inputOperation('-')} className="h-12 bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-md transition-colors">-</Button>
+                    
+                    <Button onClick={() => calculator.inputNumber('1')} className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors">1</Button>
+                    <Button onClick={() => calculator.inputNumber('2')} className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors">2</Button>
+                    <Button onClick={() => calculator.inputNumber('3')} className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors">3</Button>
+                    <Button onClick={() => calculator.inputOperation('+')} className="h-12 bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-md transition-colors">+</Button>
+                    
+                    <Button 
+                      onClick={() => calculator.inputNumber('0')} 
+                      className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors col-span-2"
+                    >
+                      0
+                    </Button>
+                    <Button onClick={() => calculator.inputDecimal()} className="h-12 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors">.</Button>
+                    <Button 
+                      onClick={() => calculator.performCalculation()} 
+                      className="h-12 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors"
+                    >
+                      =
+                    </Button>
+                  </>
                 </div>
 
                 {/* Scientific Functions */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'sin', color: 'from-violet-500 via-purple-500 to-fuchsia-500 hover:from-violet-400 hover:via-purple-400 hover:to-fuchsia-400' },
-                    { label: 'cos', color: 'from-violet-500 via-purple-500 to-fuchsia-500 hover:from-violet-400 hover:via-purple-400 hover:to-fuchsia-400' },
-                    { label: 'tan', color: 'from-violet-500 via-purple-500 to-fuchsia-500 hover:from-violet-400 hover:via-purple-400 hover:to-fuchsia-400' },
-                    { label: 'log', color: 'from-indigo-500 via-blue-500 to-cyan-500 hover:from-indigo-400 hover:via-blue-400 hover:to-cyan-400' },
-                    { label: 'ln', color: 'from-indigo-500 via-blue-500 to-cyan-500 hover:from-indigo-400 hover:via-blue-400 hover:to-cyan-400' },
-                    { label: '√', color: 'from-indigo-500 via-blue-500 to-cyan-500 hover:from-indigo-400 hover:via-blue-400 hover:to-cyan-400' },
-                    { label: 'x²', color: 'from-pink-500 via-rose-500 to-red-500 hover:from-pink-400 hover:via-rose-400 hover:to-red-400' },
-                    { label: 'π', color: 'from-pink-500 via-rose-500 to-red-500 hover:from-pink-400 hover:via-rose-400 hover:to-red-400' },
-                    { label: 'e', color: 'from-pink-500 via-rose-500 to-red-500 hover:from-pink-400 hover:via-rose-400 hover:to-red-400' }
-                  ].map((btn) => (
-                    <Button
-                      key={btn.label}
-                      onClick={() => calculator.inputOperation(btn.label === 'x²' ? '^' : btn.label)}
-                      className={`h-12 bg-gradient-to-br ${btn.color} text-white text-sm font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 rounded-xl border-0 relative overflow-hidden group`}
-                    >
-                      <span className="relative z-10">{btn.label}</span>
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </Button>
-                  ))}
-                </div>
+                {calculator.isScientificMode && (
+                  <>
+                    <div className="grid grid-cols-5 gap-2 mt-3">
+                      <Button onClick={() => calculator.inputOperation('sin(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">sin</Button>
+                      <Button onClick={() => calculator.inputOperation('cos(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">cos</Button>
+                      <Button onClick={() => calculator.inputOperation('tan(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">tan</Button>
+                      <Button onClick={() => calculator.inputOperation('log(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">log</Button>
+                      <Button onClick={() => calculator.inputOperation('ln(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">ln</Button>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-2 mt-2">
+                      <Button onClick={() => calculator.inputOperation('√(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">√</Button>
+                      <Button onClick={() => calculator.inputOperation('^')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">x^y</Button>
+                      <Button onClick={() => calculator.inputOperation('(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">(</Button>
+                      <Button onClick={() => calculator.inputOperation(')')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">)</Button>
+                      <Button onClick={() => calculator.inputOperation('π')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">π</Button>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-2 mt-2">
+                      <Button onClick={() => calculator.inputOperation('e^(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">e^x</Button>
+                      <Button onClick={() => calculator.inputOperation('10^(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">10^x</Button>
+                      <Button onClick={() => calculator.inputOperation('!')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">n!</Button>
+                      <Button onClick={() => calculator.inputOperation('1/(')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">1/x</Button>
+                      <Button onClick={() => calculator.inputOperation('|')} className="h-10 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-md transition-colors">|x|</Button>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -76,7 +76,7 @@ export const Navigation = () => {
   if (!isSignedIn) return null;
 
   return (
-    <div className="border-b bg-white shadow-sm">
+    <div className="border-b bg-white shadow-sm relative z-20">
       <div className="max-w-7xl mx-auto px-4">
         {/* Desktop Navigation ONLY - Mobile navigation moved to Sidebar */}
         <NavigationMenu className="hidden md:flex h-14">
@@ -93,19 +93,22 @@ export const Navigation = () => {
                 <NavigationMenuTrigger className="text-sm font-medium h-8 px-3">Study</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <div className="grid gap-3 p-4 w-[400px] bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-200">
-                  <Link to="/courses">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
-                      <div className="text-sm font-medium leading-none flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" />
-                        Courses
-                      </div>
-                      <p className="line-clamp-2 text-sm leading-snug text-slate-600">
-                        Comprehensive GATE preparation courses
-                      </p>
-                    </NavigationMenuLink>
-                  </Link>
-                  <Link to="/notes">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
+                  <a 
+                    href="https://gate-ready-with-ai-colleges.netlify.app/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900"
+                  >
+                    <div className="text-sm font-medium leading-none flex items-center gap-2">
+                      <School className="h-4 w-4" />
+                      Explore Courses
+                    </div>
+                    <p className="line-clamp-2 text-sm leading-snug text-slate-600">
+                      Browse through top colleges accepting GATE scores
+                    </p>
+                  </a>
+                  <NavigationMenuLink asChild>
+                    <Link to="/notes" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
                       <div className="text-sm font-medium leading-none flex items-center gap-2">
                         <StickyNote className="h-4 w-4" />
                         Notes
@@ -113,11 +116,11 @@ export const Navigation = () => {
                       <p className="line-clamp-2 text-sm leading-snug text-slate-600">
                         Access comprehensive study notes and materials
                       </p>
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                   {isSignedIn && (
-                    <Link to="/practice-tests">
-                      <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
+                    <NavigationMenuLink asChild>
+                      <Link to="/practice-tests" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
                         <div className="text-sm font-medium leading-none flex items-center gap-2">
                           <Target className="h-4 w-4" />
                           Practice Tests
@@ -125,8 +128,8 @@ export const Navigation = () => {
                         <p className="line-clamp-2 text-sm leading-snug text-slate-600">
                           Test your knowledge with practice questions
                         </p>
-                      </NavigationMenuLink>
-                    </Link>
+                      </Link>
+                    </NavigationMenuLink>
                   )}
                 </div>
               </NavigationMenuContent>
@@ -134,40 +137,38 @@ export const Navigation = () => {
 
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-sm font-medium h-8 px-3">Colleges</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <div className="grid gap-3 p-4 w-[400px] bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-200">
-                  <Link to="/college-map">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
-                      <div className="text-sm font-medium leading-none">College Map</div>
+                <NavigationMenuContent>
+                  <div className="grid gap-3 p-4 w-[400px] bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-200">
+                    <a 
+                      href="https://gate-ready-with-ai-colleges.netlify.app/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900"
+                    >
+                      <div className="text-sm font-medium leading-none flex items-center gap-2">
+                        <School className="h-4 w-4" />
+                        Explore Colleges
+                      </div>
                       <p className="line-clamp-2 text-sm leading-snug text-slate-600">
-                        Interactive map with college locations and transport info
+                        Browse through top colleges accepting GATE scores
                       </p>
-                    </NavigationMenuLink>
-                  </Link>
-                </div>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
+                    </a>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-sm font-medium h-8 px-3">Community</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <div className="grid gap-3 p-4 w-[400px] bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-200">
-                  <Link to="/groups">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
+                  <NavigationMenuLink asChild>
+                    <Link to="/groups" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
                       <div className="text-sm font-medium leading-none">Study Groups</div>
                       <p className="line-clamp-2 text-sm leading-snug text-slate-600">
                         Join study groups and collaborate
                       </p>
-                    </NavigationMenuLink>
-                  </Link>
-                  <Link to="/resources">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
-                      <div className="text-sm font-medium leading-none">Resources</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-slate-600">
-                        Share and access study materials
-                      </p>
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </div>
               </NavigationMenuContent>
             </NavigationMenuItem>
@@ -194,30 +195,30 @@ export const Navigation = () => {
                 <NavigationMenuTrigger className="text-sm font-medium h-8 px-3">Legal</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <div className="grid gap-3 p-4 w-[400px] bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-200">
-                  <Link to="/privacy">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
+                  <NavigationMenuLink asChild>
+                    <Link to="/privacy" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
                       <div className="text-sm font-medium leading-none">Privacy Policy</div>
                       <p className="line-clamp-2 text-sm leading-snug text-slate-600">
                         Our commitment to your privacy
                       </p>
-                    </NavigationMenuLink>
-                  </Link>
-                  <Link to="/terms">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
+                    </Link>
+                  </NavigationMenuLink>
+                  <NavigationMenuLink asChild>
+                    <Link to="/terms" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
                       <div className="text-sm font-medium leading-none">Terms of Service</div>
                       <p className="line-clamp-2 text-sm leading-snug text-slate-600">
                         Terms and conditions for using our platform
                       </p>
-                    </NavigationMenuLink>
-                  </Link>
-                  <Link to="/cookies">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                    </Link>
+                  </NavigationMenuLink>
+                  <NavigationMenuLink asChild>
+                    <Link to="/cookies" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
                       <div className="text-sm font-medium leading-none">Cookie Policy</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                         How we use cookies
                       </p>
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </div>
               </NavigationMenuContent>
             </NavigationMenuItem>
@@ -232,8 +233,8 @@ export const Navigation = () => {
                 <NavigationMenuTrigger className="text-sm font-medium h-8 px-3">Resources</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <div className="grid gap-3 p-4 w-[400px] bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-200">
-                  <Link to="/tutorials">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
+                  <NavigationMenuLink asChild>
+                    <Link to="/tutorials" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
                       <div className="text-sm font-medium leading-none flex items-center gap-2">
                         <BookOpen className="h-4 w-4" />
                         Tutorials
@@ -241,10 +242,10 @@ export const Navigation = () => {
                       <p className="line-clamp-2 text-sm leading-snug text-slate-600">
                         Video and written tutorials for GATE subjects
                       </p>
-                    </NavigationMenuLink>
-                  </Link>
-                  <Link to="/study-materials">
-                    <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
+                    </Link>
+                  </NavigationMenuLink>
+                  <NavigationMenuLink asChild>
+                    <Link to="/study-materials" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900">
                       <div className="text-sm font-medium leading-none flex items-center gap-2">
                         <FileText className="h-4 w-4" />
                         Study Materials
@@ -252,8 +253,8 @@ export const Navigation = () => {
                       <p className="line-clamp-2 text-sm leading-snug text-slate-600">
                         Download study materials and notes
                       </p>
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </div>
               </NavigationMenuContent>
             </NavigationMenuItem>
@@ -286,11 +287,7 @@ export const Navigation = () => {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <SignOutButton>
-                  <Button variant="ghost" className="text-sm font-medium h-8 px-3">
-                    Sign Out
-                  </Button>
-                </SignOutButton>
+                <SignOutButton />
               </NavigationMenuItem>
             </div>
           </NavigationMenuList>

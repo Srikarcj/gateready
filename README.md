@@ -1,73 +1,115 @@
-# Welcome to your Lovable project
+# GATE Ready with AI
 
-## Project info
+A comprehensive GATE (Graduate Aptitude Test in Engineering) preparation platform with AI-powered features to help students excel in their GATE examination.
 
-**URL**: https://lovable.dev/projects/d3b3de0c-a500-4820-a40a-1d926fbbf8cd
+## 🚀 Features
 
-## How can I edit this code?
+- **AI-Powered Practice**: Practice with smart question banks and get instant feedback
+- **Performance Analytics**: Track your progress with detailed analytics and insights
+- **College Explorer**: Explore IITs, NITs, and other top engineering colleges in India
+- **Transport Calculator**: Plan your journey to various engineering colleges with transport details
+- **Personalized Study Plans**: Get customized study plans based on your strengths and weaknesses
+- **Mock Tests**: Take full-length mock tests with real exam patterns
 
-There are several ways of editing your application.
+## 🛠️ Technologies Used
 
-**Use Lovable**
+- **Frontend**: 
+  - React 18 with TypeScript
+  - Vite
+  - shadcn/ui
+  - Tailwind CSS
+  - React Router
+  - React Query
+  - React Hook Form
+  - Zod for validation
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d3b3de0c-a500-4820-a40a-1d926fbbf8cd) and start prompting.
+- **Authentication**:
+  - Clerk Authentication
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Maps & Visualization**:
+  - Leaflet
+  - React Leaflet
+  - Google Maps API
 
-**Use your preferred IDE**
+- **State Management**:
+  - React Context API
+  - Zustand
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🚀 Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
 
-Follow these steps:
+- Node.js (v18 or later)
+- npm (v9 or later) or yarn
+- Git
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/gate-ready-with-ai.git
+   cd gate-ready-with-ai
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+3. **Set up environment variables**
+   Create a `.env` file in the root directory and add the following:
+   ```env
+   VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+   VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. **Open in browser**
+   The application will be available at `http://localhost:5173`
+
+## 📂 Project Structure
+
+```
+src/
+├── components/       # Reusable UI components
+├── features/         # Feature-based modules
+│   ├── auth/        # Authentication related components
+│   ├── dashboard/   # User dashboard
+│   ├── practice/    # Practice questions and tests
+│   ├── college-map/ # College explorer and transport calculator
+│   └── ...
+├── lib/             # Utility functions and configurations
+├── pages/           # Page components
+├── App.tsx          # Main application component
+└── main.tsx         # Application entry point
 ```
 
-**Edit a file directly in GitHub**
+## 🤝 Contributing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+We welcome contributions! Please follow these steps:
 
-**Use GitHub Codespaces**
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📄 License
 
-## What technologies are used for this project?
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-This project is built with:
+## 🙏 Acknowledgments
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- [GATE Official Website](https://gate.iitk.ac.in/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [React](https://reactjs.org/)
+- [Vite](https://vitejs.dev/)
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/d3b3de0c-a500-4820-a40a-1d926fbbf8cd) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)

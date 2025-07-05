@@ -817,7 +817,7 @@ export const colleges: College[] = [
     lng: 91.7361
   },
   {
-    id: 'nitap',
+    id: 'nits',
     name: 'NIT Silchar',
     type: 'NIT',
     location: 'Assam',
