@@ -2,6 +2,9 @@
 
 A comprehensive GATE (Graduate Aptitude Test in Engineering) preparation platform with AI-powered features to help students excel in their GATE examination.
 
+🔗 **Live Demo:** [https://gatereadywithai.netlify.app/](https://gatereadywithai.netlify.app/)
+
+
 ## 🚀 Features
 
 - **AI-Powered Practice**: Practice with smart question banks and get instant feedback
