@@ -33,6 +33,11 @@ export const Footer = () => {
             <h4 className="text-lg font-semibold">Quick Links</h4>
             <ul className="space-y-2">
               <li>
+                <Link to="/about" className="text-gray-300 hover:text-white transition-colors text-sm">
+                  About Us
+                </Link>
+              </li>
+              <li>
                 <Link to="/dashboard" className="text-gray-300 hover:text-white transition-colors text-sm">
                   Dashboard
                 </Link>

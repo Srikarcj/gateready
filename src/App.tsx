@@ -37,6 +37,7 @@ import TermsOfService from './pages/TermsOfService';
 import CookiePolicy from './pages/CookiePolicy';
 import Blog from './pages/Blog';
 import Tutorials from './pages/Tutorials';
+import AboutUs from './pages/AboutUs';
 import Documentation from './pages/Documentation';
 import PriorityScheduler from './pages/PriorityScheduler';
 import PomodoroRevision from './pages/PomodoroRevision';
@@ -82,6 +83,7 @@ const App = () => {
               <Route path="/blog" element={<Blog />} />
               <Route path="/tutorials" element={<Tutorials />} />
               <Route path="/docs" element={<Documentation />} />
+              <Route path="/about" element={<AboutUs />} />
 
               {/* Protected Routes */}
               <Route path="/dashboard" element={
